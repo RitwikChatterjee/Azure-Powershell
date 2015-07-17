@@ -1,0 +1,139 @@
+Import-Module azure
+
+Get-AzurePublishSettingsFile
+
+Import-AzurePublishSettingsFile "C:\Ritwik-All\Ritwik-Practice\Azure\PowerShell\Settings\Cloud Apps BPO - Mohammad Sajid (34)-8-28-2014-credentials.publishsettings"
+
+Get-AzureSubscription
+
+SubscriptionName                         : Cloud Apps BPO - Mohammad Sajid (34)
+SubscriptionId                           : ba536f23-9e87-4238-8be5-64e0b264710f
+ServiceEndpoint                          : https://management.core.windows.net/
+ResourceManagerEndpoint                  : 
+GalleryEndpoint                          : 
+ActiveDirectoryEndpoint                  : 
+ActiveDirectoryTenantId                  : 
+ActiveDirectoryServiceEndpointResourceId : 
+SqlDatabaseDnsSuffix                     : .database.windows.net
+IsDefault                                : True
+Certificate                              : [Subject]
+                                             CN=Windows Azure Tools
+                                           
+                                           [Issuer]
+                                             CN=Windows Azure Tools
+                                           
+                                           [Serial Number]
+                                             46ABEF92B95E1689480BE37A737A228F
+                                           
+                                           [Not Before]
+                                             8/28/2014 10:07:12 AM
+                                           
+                                           [Not After]
+                                             8/28/2015 10:07:12 AM
+                                           
+                                           [Thumbprint]
+                                             FDD00464F487E78272E0DBEE43696AE04FB487AB
+                                           
+RegisteredResourceProvidersList          : {}
+CurrentStorageAccountName                : 
+ActiveDirectoryUserId                    : 
+TokenProvider                            : Microsoft.WindowsAzure.Commands.Utilities.Common.Authentication.AdalTokenP
+                                           rovider
+
+
+Get-AzureStorageAccount | select label, StorageAccountStatus, Location
+
+Label                                                           StorageAccountStatus          Location                                                      
+-----                                                           --------------------          --------                                                      
+emersonpocstorage                                               Created                                                                                                                       
+noidastorage                                                    Created                                                                                                                       
+portalvhds87pxyyhtb2t4                                          Created                       South Central US                                              
+portalvhds91qsl91j953mn                                         Created                       Southeast Asia                                                
+portalvhdshdx8lsppxyw7b                                         Created                       East US                                                       
+ritwikprac1                                                     Created                       West US                                                       
+storsimpletm1rfnc2k7                                            Created                       East Asia                                                     
+
+
+
+Set-AzureSubscription "Cloud Apps BPO - Mohammad Sajid (34)" -CurrentStorageAccountName "ritwikprac1"
+
+Get-AzureLocation | select name
+
+Get-AzureVMImage | where { $_.ImageFamily -like "Windows*" } | select ImageName
+
+
+
+Test-AzureName -Service "ritwikprac1pwrshlsvc1"
+If the service name exists, then it will return True, else False
+
+Test-AzureName -Storage "ritwikprac1pwrshlsvc1"
+
+
+$image = "a699494373c04fc0bc8f2bb1389d6106__Windows-Server-2012-R2-201408.01-en.us-127GB.vhd"
+$location = "West US"
+$user = "ritwikadmin"
+$pwd = "Ritwikadmin01"
+$svcName = "ritwikpr1pssvc1"
+
+
+$vmconfig = New-AzureVMConfig -Name "ritwikpr1psvm1" -ImageName $image -InstanceSize Small |
+    Add-AzureProvisioningConfig -Windows -AdminUsername $user -Password $pwd |
+    Add-AzureDataDisk -CreateNew -DiskSizeInGB 1 -DiskLabel "ritwikpr1datadisk" -LUN 0 |
+    Add-AzureEndpoint -Name "ritwikpr1web" -Protocol tcp -LocalPort 80 -PublicPort 80
+
+$vmconfig | New-AzureVM -ServiceName $svcName -Location $location
+
+
+
+
+
+$azureSubscription = "Cloud Apps BPO - Mohammad Sajid (34)"
+$serviceName = "ritwikprac1vm"
+$vmName = "ritwikprac1vm2"
+
+$acl = New-AzureAclConfig
+
+Set-AzureAclConfig -AddRule Permit -RemoteSubnet "24.56.11.140/32" -Order 1 -Description "Allow local admin access through PS" -ACL $acl
+Set-AzureAclConfig -AddRule Deny -RemoteSubnet "0.0.0.0/0" -Order 2 -Description "Deny everyone else through PS" -ACL $acl
+
+Get-AzureVM -ServiceName $serviceName -Name $vmName |
+    Set-AzureEndpoint -Name "Remote Desktop" -ACL $acl |
+    Update-AzureVM
+
+Get-AzureVM -ServiceName $serviceName -Name $vmName |
+    Get-AzureEndpoint 
+
+
+
+
+Uploading VHD from local drive to Azure
+========================================
+
+$localpath = "C:\Ritwik-All\Ritwik-Practice\Azure\VM\VHD\ritwikprac1vhd1.vhd"
+$destinationpath = "https://ritwikprac1.blob.core.windows.net/vhds/upload/ritwikprac1vhd1.0"
+
+Add-AzureVhd -Destination $destinationpath -LocalFilePath $localpath -OverWrite
+
+
+Registering the uploaded VHD
+=============================
+
+Add-AzureDisk -DiskName "ritwikprac1upvhd1" -MediaLocation $destinationpath
+
+Downloading VHD from Azure to Local Drive
+=========================================
+$localpath = "C:\Ritwik-All\Ritwik-Practice\Azure\VM\VHD\ritwikprac1dnvhd1.vhd"
+$destinationpath = "https://ritwikprac1.blob.core.windows.net/vhds/upload/ritwikprac1vhd1.0"
+
+Save-AzureVhd -Source $destinationpath -LocalFilePath $localpath
+
+
+Fetching Credentials from user and using it
+============================================
+
+$credential = Get-Credential -Message "Enter User Credentials"
+
+$username = $credential.UserName
+$pwd = $credential.GetNetworkCredential().Password
+
+
