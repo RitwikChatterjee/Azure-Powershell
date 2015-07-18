@@ -1,10 +1,23 @@
-﻿
+﻿<#
+.SYNOPSIS
+
+Captures VM Image of a given VM and Service Name
+
+.DESCRIPTION
+
+Captures VM Image of a given VM and Service Name. It accepts the Service Name and VM Name of the VM you wish to capture image for. It also captures an image name and image label. 
+It appends SP or GN to the image name based on whether it is specialized or generalized image.
+
+#>
+
+
+
 # Variable Declaration for image capture
 
 $serviceName_toCapture = "ritwik-devbox51"
-$vmName_toCapture = "ritwik-dev-box51"
-$imageName_Captured = "ritwik-dev-box51Image"
-$imageLabel_Captured = "ritwik-dev-box51 image. No changes on top of ritwikdevimageA320150624."
+$vmName_toCapture = "ritwik-devbox51"
+$imageName_Captured = "ritwik-devbox51Image"
+$imageLabel_Captured = "ritwik-devbox51 image. No changes on top of ritwikdevimageA320150624."
 
 #  Internal Assumption Variables
 $imageName_Captured_Specialized = $imageName_Captured + "-SP"
@@ -12,7 +25,11 @@ $imageName_Captured_Generalized = $imageName_Captured + "-GN"
 $imageLabel_Captured_Specialized = $imageLabel_Captured + " - Specialized"
 $imageLabel_Captured_Generalized = $imageLabel_Captured + " - Generalized"
 
-Write-Host
+do {
+    $confirmIntention = Read-Host "Do you want to proceed with capturing VM image for " $vmName_toCapture "? (Y). Press Ctrl+C to quit."
+
+} while ($confirmIntention -ne "Y")
+
 
 $whetherCaptureSPImage = "reset"
 while ($whetherCaptureSPImage -ne "Y" -and $whetherCaptureSPImage -ne "N")
@@ -44,7 +61,7 @@ else
 {
 
     <#
-    This example captures an existing virtual machine named ‘MyVMToCapture’ as a generalized VM image named MyVMImage. 
+    This captures an existing virtual machine named ‘MyVMToCapture’ as a generalized VM image named MyVMImage. 
     This creates an image you can use repeatedly, like a template, to deploy multiple instances of a virtual machine with the same disk configuration and run them at the same time. 
     Note: You must stop or Stop-deallocate the VM before performing this operation
     #>
